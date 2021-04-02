@@ -1,5 +1,8 @@
 #include <bits/stdc++.h>
-
+#include <curses.h>
+#include <cstdlib>
+#include <unistd.h>
+#include <time.h>
 // a '#' is a wall, and a ' ' is a free space. 
 
 class Maze{
@@ -12,11 +15,11 @@ class Maze{
         
         //default intitialization
         //100 x 100.
-        Maze(int _rows = 100, int _cols = 100, uint _seed = time(NULL)) : 
-            rows(_rows), cols(_cols), seed(_seed)
+        Maze(int _rows = 100, int _cols = 100) : 
+            rows(_rows), cols(_cols)
         {
-            srand(seed);
-            //allocate size
+
+            srand(time(NULL));
             maze = (char**)malloc(rows*sizeof(char*));
             for (size_t i = 0; i<cols; ++i)
                 maze[i] = (char*)malloc(cols*sizeof(char*));
@@ -24,13 +27,14 @@ class Maze{
 
             //make a start and end point that are distinct.
             start = (std::pair<int,int>){rand()%rows, rand()%cols};
+            usleep(rand()%(rows+cols));
             end = (std::pair<int,int>){rand()%rows, rand()%cols};
             while (end == start)
                 end = (std::pair<int,int>){rand()%rows, rand()%cols};
             generateMaze();
         }
         
-    private:
+    
         std::vector<std::pair<int,int>> inMaze (std::pair<int,int> & current){
             std::vector<std::pair<int,int>> wasd;
             if (current.first-1>=0){
@@ -69,7 +73,7 @@ class Maze{
                 return pq.empty();
             }
 
-            inline bool push(T val, p priority){
+            inline void push(T val, p priority){
                 pq.emplace(priority, val);
             }
 
@@ -79,18 +83,12 @@ class Maze{
                 return ret;
             }
         };
-        void test_print(){
-            for (size_t i = 0; i<rows; ++i){
-                for (size_t j = 0; j<cols; ++j)
-                    std::cout<<maze[i][j];
-                std::cout<<std::endl;
-            }
-        }
+    private:
         void weightedAStarGeneration(){
             //seed with pseudorandom weights: [0,255).
             for (size_t i = 0; i<rows; ++i)
                 for (size_t j = 0; j<cols; ++j)
-                    maze[i][j] = rand()%50+1;
+                    maze[i][j] = (rand()%100);
             
             //unweighted begin and end.
             maze[start.first][start.second] = maze[end.first][end.second] = 0;
@@ -143,6 +141,29 @@ class Maze{
                 for (size_t j = 0; j<cols; ++j)
                     if (maze[i][j]!='X')
                         maze[i][j] = rand()%2 ? ' ' : '#';
+                    else
+                        maze[i][j] = ' ';
+                
+
+            maze[start.first][start.second] = 'S';
+            maze[end.first][end.second] = 'E';
+
+            //test_print();
+            //std::cout<< "\n\nMaze with >=1 solutions generated." << std::endl;
+        }
+        void generateMazeDebug(){
+            
+
+            //path is of type: std::unordered_map<std::pair<int,int>, std::pair<int,int>>
+            weightedAStarGeneration();
+            auto location = generatedPath[end];
+            while (location!=start)
+                maze[location.first][location.second] = 'X', location = generatedPath[location];
+            
+            for (size_t i = 0; i<rows; ++i)
+                for (size_t j = 0; j<cols; ++j)
+                    if (maze[i][j]!='X')
+                        maze[i][j] = rand()%2 ? ' ' : '#';
                     //else
                     //    maze[i][j] = ' '
                 
@@ -150,8 +171,8 @@ class Maze{
             maze[start.first][start.second] = 'S';
             maze[end.first][end.second] = 'E';
 
-            test_print();
-            std::cout<< "\n\nMaze with >=1 solutions generated." << std::endl;
+            //test_print();
+            //std::cout<< "\n\nMaze with >=1 solutions generated." << std::endl;
         }
         std::unordered_map<std::pair<int,int>,std::pair<int,int>, locHash> generatedPath;
         uint seed;

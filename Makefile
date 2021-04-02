@@ -1,4 +1,4 @@
 all:
-	g++ -g3 maze.h pathfinder.cpp -o main
+	g++ -Ofast -w maze.h pathfinder.cpp -lncurses -ldl -pthread -o main
 clean:
 	rm -f main
